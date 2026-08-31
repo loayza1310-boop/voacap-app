@@ -491,7 +491,13 @@ def voacap():
 
     try:
 
-        datos = request.get_json()
+        datos = request.get_json(silent=True)
+
+if not datos:
+    try:
+        datos = json.loads(request.get_data(as_text=True))
+    except Exception:
+        datos = None
 
         # -------------------------------------------------
         # VERIFICAR DATOS
