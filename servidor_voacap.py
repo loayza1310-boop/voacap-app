@@ -493,10 +493,9 @@ def voacap():
 
         datos = request.get_json(silent=True)
         if datos is None:
-            try:
+            
                 datos = json.loads(request.get_data(as_text=True))
-            except Exception:
-                datos=None
+    
 
         # -------------------------------------------------
         # VERIFICAR DATOS
