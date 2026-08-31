@@ -240,10 +240,10 @@ def consultar_voacap(datos):
     # =====================================================
 
     respuesta = requests.post(
-    VOACAP_URL,
-    data=formulario,
-    headers=headers,
-    timeout=60
+        VOACAP_URL,
+        data=formulario,
+        headers=headers,
+        timeout=60
     )
     respuesta.raise_for_status()
     return respuesta.text, distancia_km, azimut, potencia_w
