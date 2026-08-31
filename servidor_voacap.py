@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import math
 import re
-
+import json
 app = Flask(__name__)
 
 VOACAP_URL = "https://www.voacap.com/hf/best_freq.html"
