@@ -240,15 +240,15 @@ def consultar_voacap(datos):
     # =====================================================
 
     respuesta = requests.post(
-        VOACAP_URL,
-        data=formulario,
-        headers=headers,
-        timeout=60
-    )
+    VOACAP_URL,
+    data=formulario,
+    headers=headers,
+    timeout=60
+)
 
-    respuesta.raise_for_status()
+respuesta.raise_for_status()
 
-    return respuesta.text
+return respuesta.text, distancia_km, azimut, potencia_w
 
 
 # =========================================================
@@ -546,24 +546,30 @@ def voacap():
         # CONSULTAR VOACAP
         # -------------------------------------------------
 
-        html = consultar_voacap(datos)
+        html, distancia_km, azimut, potencia_w = consultar_voacap(datos)
 
-        # -------------------------------------------------
-        # EXTRAER RESULTADOS
-        # -------------------------------------------------
+# -------------------------------------------------
+# EXTRAER RESULTADOS
+# -------------------------------------------------
 
-        resultados = extraer_resultados(html)
+resultados = extraer_resultados(html)
 
-        # -------------------------------------------------
-        # RESPUESTA
-        # -------------------------------------------------
+# -------------------------------------------------
+# RESPUESTA
+# -------------------------------------------------
 
-        return jsonify({
+return jsonify({
 
-            "estado": "OK",
+    "estado": "OK",
 
-            "resultados": resultados
-        })
+    "distancia_km": round(distancia_km, 2),
+
+    "azimut": round(azimut, 2),
+
+    "potencia_w": round(potencia_w, 2),
+
+    "resultados": resultados
+})
 
     except requests.exceptions.RequestException as e:
 
