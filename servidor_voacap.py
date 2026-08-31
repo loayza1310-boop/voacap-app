@@ -244,11 +244,9 @@ def consultar_voacap(datos):
     data=formulario,
     headers=headers,
     timeout=60
-)
-
-respuesta.raise_for_status()
-
-return respuesta.text, distancia_km, azimut, potencia_w
+    )
+    respuesta.raise_for_status()
+    return respuesta.text, distancia_km, azimut, potencia_w
 
 
 # =========================================================
