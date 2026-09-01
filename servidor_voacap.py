@@ -487,13 +487,17 @@ def inicio():
 @app.route("/voacap", methods=["POST"])
 def voacap():
 
+    @app.route("/voacap", methods=["POST"])
+def voacap():
+
     try:
 
         datos = request.get_json(silent=True)
+
         if datos is None:
-            
-                datos = json.loads(request.get_data(as_text=True))
-    
+            datos = json.loads(
+                request.get_data(as_text=True)
+            )
 
         # -------------------------------------------------
         # VERIFICAR DATOS
@@ -507,6 +511,7 @@ def voacap():
 
                 "mensaje":
                     "No se recibieron datos"
+
             }), 400
 
         campos_requeridos = [
@@ -517,6 +522,7 @@ def voacap():
             "rxlat",
             "rxlon",
             "txpower"
+
         ]
 
         faltantes = []
@@ -538,6 +544,7 @@ def voacap():
 
                 "faltantes":
                     faltantes
+
             }), 400
 
         # -------------------------------------------------
@@ -546,28 +553,33 @@ def voacap():
 
         html, distancia_km, azimut, potencia_w = consultar_voacap(datos)
 
-# -------------------------------------------------
-# EXTRAER RESULTADOS
-# -------------------------------------------------
+        # -------------------------------------------------
+        # EXTRAER RESULTADOS
+        # -------------------------------------------------
 
-resultados = extraer_resultados(html)
+        resultados = extraer_resultados(html)
 
-# -------------------------------------------------
-# RESPUESTA
-# -------------------------------------------------
+        # -------------------------------------------------
+        # RESPUESTA
+        # -------------------------------------------------
 
-return jsonify({
+        return jsonify({
 
-    "estado": "OK",
+            "estado": "OK",
 
-    "distancia_km": round(distancia_km, 2),
+            "distancia_km":
+                round(distancia_km, 2),
 
-    "azimut": round(azimut, 2),
+            "azimut":
+                round(azimut, 2),
 
-    "potencia_w": round(potencia_w, 2),
+            "potencia_w":
+                round(potencia_w, 2),
 
-    "resultados": resultados
-})
+            "resultados":
+                resultados
+
+        })
 
     except requests.exceptions.RequestException as e:
 
@@ -596,8 +608,6 @@ return jsonify({
                 str(e)
 
         }), 500
-
-
 # =========================================================
 # INICIAR SERVIDOR
 # =========================================================
