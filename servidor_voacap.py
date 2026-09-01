@@ -1,9 +1,10 @@
-﻿from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
 import math
 import re
 import json
+
 app = Flask(__name__)
 
 VOACAP_URL = "https://www.voacap.com/hf/best_freq.html"
@@ -14,7 +15,6 @@ VOACAP_URL = "https://www.voacap.com/hf/best_freq.html"
 # =========================================================
 
 def calcular_distancia_azimut(lat1, lon1, lat2, lon2):
-
     R = 6371.0
 
     lat1_rad = math.radians(lat1)
@@ -25,8 +25,7 @@ def calcular_distancia_azimut(lat1, lon1, lat2, lon2):
 
     a = (
         math.sin(dlat / 2) ** 2
-        +
-        math.cos(lat1_rad)
+        + math.cos(lat1_rad)
         * math.cos(lat2_rad)
         * math.sin(dlon / 2) ** 2
     )
@@ -42,14 +41,12 @@ def calcular_distancia_azimut(lat1, lon1, lat2, lon2):
 
     x = (
         math.cos(lat1_rad) * math.sin(lat2_rad)
-        -
-        math.sin(lat1_rad)
+        - math.sin(lat1_rad)
         * math.cos(lat2_rad)
         * math.cos(dlon)
     )
 
     azimut = math.degrees(math.atan2(y, x))
-
     azimut = (azimut + 360) % 360
 
     return distancia_km, azimut
@@ -73,7 +70,7 @@ def consultar_voacap(datos):
     rxlat = float(datos["rxlat"])
     rxlon = float(datos["rxlon"])
 
-    # Potencia que llega desde App Inventor en WATTS
+    # Potencia recibida desde App Inventor en WATTS
     potencia_w = float(datos["txpower"])
 
     # -----------------------------------------------------
@@ -98,7 +95,6 @@ def consultar_voacap(datos):
     # -----------------------------------------------------
 
     formulario = {
-
         "date": fecha,
 
         "txname": "TX",
@@ -108,10 +104,7 @@ def consultar_voacap(datos):
         # VOACAP utiliza kW
         "txpower": "{:.4f}".format(potencia_kw),
 
-        # =================================================
-        # SSB FIJO
-        # =================================================
-
+        # SSB
         "txmode": "38",
 
         "rxname": "RX",
@@ -138,23 +131,14 @@ def consultar_voacap(datos):
         "rxelon": "139.7296",
 
         "method": "30",
-
         "midpoint": "0",
-
         "mapengine": "voacap",
-
         "proj": "cyl",
-
         "mintoa": "3.00",
-
         "noise": "153",
-
         "path": "0",
-
         "ssn": "-1",
-
         "dynssn": "",
-
         "es": "0",
 
         # -------------------------------------------------
@@ -162,7 +146,6 @@ def consultar_voacap(datos):
         # -------------------------------------------------
 
         "deg": "{:.0f}".format(azimut),
-
         "km": "{:.0f}".format(distancia_km),
 
         # -------------------------------------------------
@@ -176,19 +159,13 @@ def consultar_voacap(datos):
         "spmplon": "0",
 
         "areatime": "20",
-
         "arearange": "1",
-
         "areaband": "14.100",
 
         "para": "",
-
         "rxset": "dxcc",
-
         "antset": "dipoles",
-
         "eaa": "Y",
-
         "action": "",
 
         # -------------------------------------------------
@@ -196,7 +173,6 @@ def consultar_voacap(datos):
         # -------------------------------------------------
 
         "txantenna": "d60m.ant",
-
         "rxantenna": "2elevert.ant",
 
         "txantenna2": "d60m.ant",
@@ -224,15 +200,9 @@ def consultar_voacap(datos):
     # =====================================================
 
     headers = {
-
-        "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-
-        "Referer":
-            "https://www.voacap.com/hf/",
-
-        "Origin":
-            "https://www.voacap.com"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Referer": "https://www.voacap.com/hf/",
+        "Origin": "https://www.voacap.com"
     }
 
     # =====================================================
@@ -245,7 +215,9 @@ def consultar_voacap(datos):
         headers=headers,
         timeout=60
     )
+
     respuesta.raise_for_status()
+
     return respuesta.text, distancia_km, azimut, potencia_w
 
 
@@ -256,34 +228,18 @@ def consultar_voacap(datos):
 def extraer_resultados(html):
 
     soup = BeautifulSoup(html, "html.parser")
-
     resultados = []
 
-    # -----------------------------------------------------
-    # VOACAP coloca el detalle Best Frequencies dentro
-    # de un bloque PRE
-    # -----------------------------------------------------
-
+    # VOACAP coloca normalmente el detalle en un bloque PRE
     pre = soup.find("pre")
 
     if not pre:
-
         return resultados
 
     texto = pre.get_text("\n")
-
     lineas = texto.splitlines()
 
-    # -----------------------------------------------------
-    # GUARDAR FRECUENCIAS
-    # -----------------------------------------------------
-
     frecuencias = {}
-
-    # -----------------------------------------------------
-    # GUARDAR FOT Y MUF
-    # -----------------------------------------------------
-
     parametros = {}
 
     for linea in lineas:
@@ -296,19 +252,15 @@ def extraer_resultados(html):
         partes = linea.split()
 
         # -------------------------------------------------
-        # PRIMER ELEMENTO DEBE SER UTC
+        # PRIMER ELEMENTO = UTC
         # -------------------------------------------------
 
         try:
-
             utc = int(partes[0])
-
-        except:
-
+        except (ValueError, IndexError):
             continue
 
         if utc < 1 or utc > 24:
-
             continue
 
         # -------------------------------------------------
@@ -318,39 +270,22 @@ def extraer_resultados(html):
         if len(partes) >= 2:
 
             frecuencia = partes[1]
-
             frecuencia_limpia = frecuencia.replace("?", "")
 
             try:
-
                 float(frecuencia_limpia)
 
                 if utc not in frecuencias:
-
                     frecuencias[utc] = []
 
                 if len(frecuencias[utc]) < 3:
+                    frecuencias[utc].append(frecuencia_limpia)
 
-                    frecuencias[utc].append(frecuencia)
-
-            except:
-
+            except ValueError:
                 pass
 
         # -------------------------------------------------
         # BUSCAR FOT Y MUF
-        # -------------------------------------------------
-
-        # La primera línea de cada hora contiene:
-        #
-        # ... ΔSNR    FOT    MUF    HPF
-        #
-        # Los tres últimos valores son:
-        #
-        # FOT
-        # MUF
-        # HPF
-        #
         # -------------------------------------------------
 
         if utc not in parametros:
@@ -363,7 +298,6 @@ def extraer_resultados(html):
                 valor = valor.replace("?", "")
                 valor = valor.replace("*", "")
 
-                # Eliminar unidades o caracteres
                 valor = re.sub(
                     r"[^0-9.\-+]",
                     "",
@@ -371,28 +305,20 @@ def extraer_resultados(html):
                 )
 
                 if valor in ("", "-", ".", "+"):
-
                     continue
 
                 try:
-
                     numeros.append(float(valor))
-
-                except:
-
+                except ValueError:
                     pass
 
-            # -------------------------------------------------
-            # EN LA LÍNEA COMPLETA:
-            # LOS ÚLTIMOS 3 NÚMEROS SON FOT/MUF/HPF
-            # -------------------------------------------------
+            # Los últimos tres números se interpretan como:
+            # FOT, MUF, HPF
 
             if len(numeros) >= 15:
 
                 parametros[utc] = {
-
                     "fot": numeros[-3],
-
                     "muf": numeros[-2]
                 }
 
@@ -404,13 +330,9 @@ def extraer_resultados(html):
 
         lista = frecuencias[utc]
 
-        datos = parametros.get(
-            utc,
-            {}
-        )
+        datos_hora = parametros.get(utc, {})
 
         resultado = {
-
             "utc": utc,
 
             "freq1":
@@ -429,10 +351,10 @@ def extraer_resultados(html):
                 else None,
 
             "fot":
-                datos.get("fot"),
+                datos_hora.get("fot"),
 
             "muf":
-                datos.get("muf")
+                datos_hora.get("muf")
         }
 
         resultados.append(resultado)
@@ -448,35 +370,27 @@ def extraer_resultados(html):
 def inicio():
 
     return jsonify({
+        "servidor": "VOACAP Online API",
+        "estado": "funcionando",
+        "modo": "SSB",
 
-        "servidor":
-            "VOACAP Online API",
+        "entradas": [
+            "date",
+            "txlat",
+            "txlon",
+            "rxlat",
+            "rxlon",
+            "txpower"
+        ],
 
-        "estado":
-            "funcionando",
-
-        "modo":
-            "SSB",
-
-        "entradas":
-            [
-                "date",
-                "txlat",
-                "txlon",
-                "rxlat",
-                "rxlon",
-                "txpower_W"
-            ],
-
-        "salidas":
-            [
-                "utc",
-                "freq1",
-                "freq2",
-                "freq3",
-                "fot",
-                "muf"
-            ]
+        "salidas": [
+            "utc",
+            "freq1",
+            "freq2",
+            "freq3",
+            "fot",
+            "muf"
+        ]
     })
 
 
@@ -487,17 +401,21 @@ def inicio():
 @app.route("/voacap", methods=["POST"])
 def voacap():
 
-    @app.route("/voacap", methods=["POST"])
-def voacap():
-
     try:
 
         datos = request.get_json(silent=True)
 
         if datos is None:
-            datos = json.loads(
-                request.get_data(as_text=True)
-            )
+
+            cuerpo = request.get_data(as_text=True)
+
+            if not cuerpo.strip():
+                return jsonify({
+                    "estado": "ERROR",
+                    "mensaje": "No se recibieron datos"
+                }), 400
+
+            datos = json.loads(cuerpo)
 
         # -------------------------------------------------
         # VERIFICAR DATOS
@@ -506,23 +424,17 @@ def voacap():
         if not datos:
 
             return jsonify({
-
                 "estado": "ERROR",
-
-                "mensaje":
-                    "No se recibieron datos"
-
+                "mensaje": "No se recibieron datos"
             }), 400
 
         campos_requeridos = [
-
             "date",
             "txlat",
             "txlon",
             "rxlat",
             "rxlon",
             "txpower"
-
         ]
 
         faltantes = []
@@ -530,21 +442,14 @@ def voacap():
         for campo in campos_requeridos:
 
             if campo not in datos:
-
                 faltantes.append(campo)
 
         if faltantes:
 
             return jsonify({
-
                 "estado": "ERROR",
-
-                "mensaje":
-                    "Faltan parámetros",
-
-                "faltantes":
-                    faltantes
-
+                "mensaje": "Faltan parámetros",
+                "faltantes": faltantes
             }), 400
 
         # -------------------------------------------------
@@ -564,50 +469,38 @@ def voacap():
         # -------------------------------------------------
 
         return jsonify({
-
             "estado": "OK",
-
-            "distancia_km":
-                round(distancia_km, 2),
-
-            "azimut":
-                round(azimut, 2),
-
-            "potencia_w":
-                round(potencia_w, 2),
-
-            "resultados":
-                resultados
-
+            "distancia_km": round(distancia_km, 2),
+            "azimut": round(azimut, 2),
+            "potencia_w": round(potencia_w, 2),
+            "resultados": resultados
         })
 
     except requests.exceptions.RequestException as e:
 
         return jsonify({
-
             "estado": "ERROR",
-
-            "mensaje":
-                "Error comunicando con VOACAP Online",
-
-            "detalle":
-                str(e)
-
+            "mensaje": "Error comunicando con VOACAP Online",
+            "detalle": str(e)
         }), 502
+
+    except (ValueError, TypeError, json.JSONDecodeError) as e:
+
+        return jsonify({
+            "estado": "ERROR",
+            "mensaje": "Datos recibidos no válidos",
+            "detalle": str(e)
+        }), 400
 
     except Exception as e:
 
         return jsonify({
-
             "estado": "ERROR",
-
-            "mensaje":
-                "Error interno del servidor",
-
-            "detalle":
-                str(e)
-
+            "mensaje": "Error interno del servidor",
+            "detalle": str(e)
         }), 500
+
+
 # =========================================================
 # INICIAR SERVIDOR
 # =========================================================
@@ -630,10 +523,7 @@ if __name__ == "__main__":
     print("")
 
     app.run(
-
         host="0.0.0.0",
-
         port=5000,
-
         debug=True
     )
